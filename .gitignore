@@ -1,0 +1,16 @@
+# Binaries for programs and plugins
+/bin/
+
+# Vendor directory
+/vendor/
+
+# Test binary, build outputs
+*.exe
+*.log
+
+# IDE files
+.idea/
+.vscode/
+
+# Environment
+.env
