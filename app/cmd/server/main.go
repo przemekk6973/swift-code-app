@@ -1,13 +1,32 @@
+// @title        SWIFT Codes API
+// @version      1.0
+// @description  REST API that manages SWIFT codes (HQ and branches)
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name   Przemyslaw Kukla
+// @contact.email  przemek.kukla0703@gmail.com
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host     localhost:8080
+// @BasePath /
+
+// @schemes http https
+
 package main
 
 import (
 	"context"
 	"github.com/joho/godotenv"
+	_ "github.com/przemekk6973/swift-code-app/app/docs"
 	"github.com/przemekk6973/swift-code-app/app/internal/adapter/api"
 	"github.com/przemekk6973/swift-code-app/app/internal/adapter/persistence"
 	"github.com/przemekk6973/swift-code-app/app/internal/domain/usecases"
 	"github.com/przemekk6973/swift-code-app/app/internal/initializer"
 	"github.com/przemekk6973/swift-code-app/app/internal/util"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
 	"net/http"
 	"os"
@@ -53,6 +72,9 @@ func main() {
 	// 4) Wire up service & API
 	svc := usecases.NewSwiftService(repo)
 	router := api.SetupRouter(svc)
+
+	// Route dla Swagger UI
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	port := os.Getenv("PORT")
 	if port == "" {

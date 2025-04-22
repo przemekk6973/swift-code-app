@@ -1,0 +1,226 @@
+basePath: /
+definitions:
+  models.CountrySwiftCodesResponse:
+    properties:
+      countryISO2:
+        type: string
+      countryName:
+        type: string
+      swiftCodes:
+        items:
+          $ref: '#/definitions/models.SwiftBranch'
+        type: array
+    type: object
+  models.SwiftBranch:
+    properties:
+      address:
+        type: string
+      bankName:
+        type: string
+      countryISO2:
+        type: string
+      countryName:
+        type: string
+      isHeadquarter:
+        type: boolean
+      swiftCode:
+        type: string
+    type: object
+  models.SwiftCode:
+    properties:
+      address:
+        type: string
+      bankName:
+        type: string
+      branches:
+        items:
+          $ref: '#/definitions/models.SwiftBranch'
+        type: array
+      countryISO2:
+        type: string
+      countryName:
+        type: string
+      isHeadquarter:
+        type: boolean
+      swiftCode:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: przemek.kukla0703@gmail.com
+    name: Przemyslaw Kukla
+  description: REST API that manages SWIFT codes (HQ and branches)
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: SWIFT Codes API
+  version: "1.0"
+paths:
+  /v1/swift-codes:
+    post:
+      consumes:
+      - application/json
+      description: Adds either a headquarter (isHeadquarter=true) or a branch (isHeadquarter=false).
+      parameters:
+      - description: SWIFT code payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/models.SwiftCode'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: swift code added
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: invalid input or missing HQ for branch
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: duplicate code
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new SWIFT code entry
+      tags:
+      - swift-codes
+  /v1/swift-codes/{swift-code}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a headquarter (and all its branches) if code ends with
+        XXX, or a single branch otherwise.
+      parameters:
+      - description: SWIFT code to delete
+        in: path
+        name: swift-code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: swift code deleted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: invalid SWIFT code format
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: SWIFT code not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a SWIFT code entry
+      tags:
+      - swift-codes
+    get:
+      consumes:
+      - application/json
+      description: Returns the headquarter with its branches if the code is HQ, or
+        a single branch object if branch code.
+      parameters:
+      - description: SWIFT code (8 or 11 characters)
+        in: path
+        name: swift-code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SwiftCode'
+        "400":
+          description: invalid SWIFT code format
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: SWIFT code not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Retrieve details for a single SWIFT code
+      tags:
+      - swift-codes
+  /v1/swift-codes/country/{countryISO2code}:
+    get:
+      consumes:
+      - application/json
+      description: Returns all headquarters and branches for a given country ISO2.
+      parameters:
+      - description: Country ISO2 code
+        in: path
+        name: countryISO2code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CountrySwiftCodesResponse'
+        "400":
+          description: invalid ISO2 format
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: no SWIFT codes for country
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Retrieve all SWIFT codes for a country
+      tags:
+      - swift-codes
+schemes:
+- http
+- https
+swagger: "2.0"

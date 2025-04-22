@@ -1,0 +1,338 @@
+{
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "REST API that manages SWIFT codes (HQ and branches)",
+        "title": "SWIFT Codes API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Przemyslaw Kukla",
+            "email": "przemek.kukla0703@gmail.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/v1/swift-codes": {
+            "post": {
+                "description": "Adds either a headquarter (isHeadquarter=true) or a branch (isHeadquarter=false).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "swift-codes"
+                ],
+                "summary": "Create a new SWIFT code entry",
+                "parameters": [
+                    {
+                        "description": "SWIFT code payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.SwiftCode"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "swift code added",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "invalid input or missing HQ for branch",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "duplicate code",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/swift-codes/country/{countryISO2code}": {
+            "get": {
+                "description": "Returns all headquarters and branches for a given country ISO2.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "swift-codes"
+                ],
+                "summary": "Retrieve all SWIFT codes for a country",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Country ISO2 code",
+                        "name": "countryISO2code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.CountrySwiftCodesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid ISO2 format",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "no SWIFT codes for country",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/swift-codes/{swift-code}": {
+            "get": {
+                "description": "Returns the headquarter with its branches if the code is HQ, or a single branch object if branch code.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "swift-codes"
+                ],
+                "summary": "Retrieve details for a single SWIFT code",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "SWIFT code (8 or 11 characters)",
+                        "name": "swift-code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.SwiftCode"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid SWIFT code format",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "SWIFT code not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a headquarter (and all its branches) if code ends with XXX, or a single branch otherwise.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "swift-codes"
+                ],
+                "summary": "Delete a SWIFT code entry",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "SWIFT code to delete",
+                        "name": "swift-code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "swift code deleted",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "invalid SWIFT code format",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "SWIFT code not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.CountrySwiftCodesResponse": {
+            "type": "object",
+            "properties": {
+                "countryISO2": {
+                    "type": "string"
+                },
+                "countryName": {
+                    "type": "string"
+                },
+                "swiftCodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.SwiftBranch"
+                    }
+                }
+            }
+        },
+        "models.SwiftBranch": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "bankName": {
+                    "type": "string"
+                },
+                "countryISO2": {
+                    "type": "string"
+                },
+                "countryName": {
+                    "type": "string"
+                },
+                "isHeadquarter": {
+                    "type": "boolean"
+                },
+                "swiftCode": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.SwiftCode": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "bankName": {
+                    "type": "string"
+                },
+                "branches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.SwiftBranch"
+                    }
+                },
+                "countryISO2": {
+                    "type": "string"
+                },
+                "countryName": {
+                    "type": "string"
+                },
+                "isHeadquarter": {
+                    "type": "boolean"
+                },
+                "swiftCode": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
