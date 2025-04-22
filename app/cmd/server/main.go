@@ -1,15 +1,19 @@
 package main
 
 import (
-	"log"
-	"os"
-
+	"context"
 	"github.com/joho/godotenv"
 	"github.com/przemekk6973/swift-code-app/app/internal/adapter/api"
 	"github.com/przemekk6973/swift-code-app/app/internal/adapter/persistence"
 	"github.com/przemekk6973/swift-code-app/app/internal/domain/usecases"
 	"github.com/przemekk6973/swift-code-app/app/internal/initializer"
 	"github.com/przemekk6973/swift-code-app/app/internal/util"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func main() {
@@ -54,6 +58,40 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-	log.Printf("listening on :%s", port)
-	router.Run(":" + port)
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: router,
+	}
+
+	// start server
+	go func() {
+		log.Printf("listening on :%s", port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen error: %v", err)
+		}
+	}()
+
+	// czekaj na SIGINT/SIGTERM
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("shutting down server...")
+
+	// kontekst z timeoutem na graceful shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// najpierw HTTP server
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Printf("server forced to shutdown: %v", err)
+	}
+
+	// potem zamknięcie Mongo
+	if closer, ok := repo.(interface{ Close(context.Context) error }); ok {
+		if err := closer.Close(ctx); err != nil {
+			log.Printf("error closing Mongo connection: %v", err)
+		}
+	}
+
+	log.Println("server exited cleanly")
 }

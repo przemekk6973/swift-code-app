@@ -134,3 +134,8 @@ func (s *SwiftService) DeleteSwiftCode(ctx context.Context, code string) error {
 	}
 	return nil
 }
+
+// HealthCheck sprawdza, czy baza jest dostępna
+func (s *SwiftService) HealthCheck(ctx context.Context) error {
+	return s.repo.Ping(ctx)
+}

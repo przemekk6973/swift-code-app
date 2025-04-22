@@ -1,0 +1,26 @@
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: swift_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  api:
+    build:
+      context: .
+    depends_on:
+      - mongo
+    ports:
+      - "8080:8080"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017
+      - MONGO_DB=swiftdb
+      - MONGO_COLLECTION=swiftCodes
+      - CSV_PATH=/root/data/Interns_2025_SWIFT_CODES.csv
+      - COUNTRIES_CSV=/root/data/countries.csv
+      - PORT=8080
+
+volumes:
+  mongo_data:

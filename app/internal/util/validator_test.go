@@ -6,9 +6,9 @@ import (
 
 func TestValidateSwiftCode(t *testing.T) {
 	valid := []string{
-		"ABCDEFGH",    // 8 znaków HQ
-		"ABCDEFGHXXX", // 11 znaków HQ
-		"ABCDEFGH123", // 11 znaków branch
+		"ABCDEFGH",    // 8 znaków, HQ bez XXX
+		"ABCDEFGHXXX", // 11 znaków, HQ
+		"ABCDEFGH123", // 11 znaków, branch
 	}
 	for _, code := range valid {
 		if err := ValidateSwiftCode(code); err != nil {
@@ -18,8 +18,9 @@ func TestValidateSwiftCode(t *testing.T) {
 
 	invalid := []string{
 		"ABC",           // za krótkie
-		"ABCDEFGHIJKLM", // za długie (13)
-		"ABCDEFGH!",     // niedozwolony znak
+		"ABCDEFGHIJKLM", // za długie
+		"ABCDEFGH!@#",   // zabronione znaki
+		"ABCDEFGHXX",    // 10 znaków
 	}
 	for _, code := range invalid {
 		if err := ValidateSwiftCode(code); err == nil {
@@ -43,13 +44,25 @@ func TestValidateCountryISO2(t *testing.T) {
 	}
 }
 
-// Jeśli masz ValidateCountryNameMatch(country, name, map), dodaj tak:
 func TestValidateCountryNameMatch(t *testing.T) {
-	countries := map[string]string{"PL": "POLAND", "DE": "GERMANY"}
-	if err := ValidateCountryNameMatch("PL", "POLAND", countries); err != nil {
-		t.Fatal(err)
+	countries := map[string]string{
+		"PL": "POLAND",
+		"DE": "Germany", // mixed case
 	}
+	// exact match
+	if err := ValidateCountryNameMatch("PL", "POLAND", countries); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	// case‐insensitive match
+	if err := ValidateCountryNameMatch("DE", "germany", countries); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	// mismatch
 	if err := ValidateCountryNameMatch("PL", "POLska", countries); err == nil {
-		t.Errorf("expected mismatch error for country name different case/typo")
+		t.Errorf("expected mismatch error for %q vs %q", "PL", "POLska")
+	}
+	// missing key
+	if err := ValidateCountryNameMatch("XX", "Xland", countries); err == nil {
+		t.Errorf("expected error for missing country ISO2 key")
 	}
 }

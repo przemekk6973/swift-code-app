@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 
 	"github.com/przemekk6973/swift-code-app/app/internal/domain/models"
 	"github.com/przemekk6973/swift-code-app/app/internal/port"
@@ -219,4 +220,13 @@ func (r *MongoRepository) Delete(ctx context.Context, code string) error {
 		return port.ErrNotFound
 	}
 	return nil
+}
+
+func (r *MongoRepository) Ping(ctx context.Context) error {
+	return r.client.Ping(ctx, readpref.Primary())
+}
+
+// Close zamyka połączenie klienta MongoDB
+func (r *MongoRepository) Close(ctx context.Context) error {
+	return r.client.Disconnect(ctx)
 }

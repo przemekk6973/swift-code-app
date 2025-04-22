@@ -25,6 +25,8 @@ type SwiftRepository interface {
 
 	// Delete usuwa wpis po podanym kodzie SWIFT
 	Delete(ctx context.Context, code string) error
+
+	Ping(ctx context.Context) error
 }
 
 var (
