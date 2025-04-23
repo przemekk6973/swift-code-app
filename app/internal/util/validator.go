@@ -43,14 +43,25 @@ func ValidateCountryISO2(iso2 string) error {
 	return nil
 }
 
-// ValidateCountryNameMatch checks if nazwa kraju pasuje do ISO2 (dostępnego z mapy)
+// ValidateCountryNameMatch checks if the given country name matches the entry
+// in nameMap for the provided ISO‑2 code (case‑insensitive on both ISO2 and name).
 func ValidateCountryNameMatch(iso2, inputName string, nameMap map[string]string) error {
+	// 1) Normalize the ISO2 code to uppercase
+	iso2 = strings.ToUpper(strings.TrimSpace(iso2))
+
 	expected, ok := nameMap[iso2]
 	if !ok {
 		return WrapError(ErrBadRequest, "unknown country ISO2: %s", iso2)
 	}
+
+	// 2) Trim and compare names case‑insensitively
+	inputName = strings.TrimSpace(inputName)
 	if !strings.EqualFold(inputName, expected) {
-		return WrapError(ErrBadRequest, "country name '%s' does not match ISO2 '%s' (expected '%s')", inputName, iso2, expected)
+		return WrapError(
+			ErrBadRequest,
+			"country name %q does not match ISO2 %s (expected %q)",
+			inputName, iso2, expected,
+		)
 	}
 	return nil
 }

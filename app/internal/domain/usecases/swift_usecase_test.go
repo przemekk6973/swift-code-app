@@ -16,6 +16,10 @@ type stubRepo struct {
 	deleteErr    error
 }
 
+func (s *stubRepo) Ping(ctx context.Context) error {
+	return nil
+}
+
 func (s *stubRepo) SaveHeadquarters(ctx context.Context, hqs []models.SwiftCode) (models.ImportSummary, error) {
 	return models.ImportSummary{}, nil
 }
