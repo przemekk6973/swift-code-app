@@ -14,7 +14,7 @@ const (
 	testCollection = "test_codes"
 )
 
-// getTestRepo tries to connect; skips the test if Mongo isn't running.
+// getTestRepo tries to connect: skips the test if Mongo isn't running.
 func getTestRepo(t *testing.T) *MongoRepository {
 	repoIface, err := NewMongoRepository(testURI, testDB, testCollection)
 	if err != nil {
@@ -71,7 +71,7 @@ func TestSaveBranchesAndGetByCountryAndDelete(t *testing.T) {
 		{SwiftCode: "CCCCGB2LXXX", BankName: "Bank C", Address: "Addr C", CountryISO2: "GB", CountryName: "UK", IsHeadquarter: true},
 	})
 
-	// 1) Branch with no HQ
+	// Branch with no HQ
 	branches := []models.SwiftCode{
 		{SwiftCode: "ZZZZGB2LAB1", BankName: "Branch Z", Address: "Addr Z", CountryISO2: "GB", CountryName: "UK", IsHeadquarter: false},
 	}
@@ -83,7 +83,7 @@ func TestSaveBranchesAndGetByCountryAndDelete(t *testing.T) {
 		t.Errorf("expected BranchesMissingHQ=1; got %+v", summary)
 	}
 
-	// 2) Valid branch
+	// Valid branch
 	branches = []models.SwiftCode{
 		{SwiftCode: "CCCCGB2LAB1", BankName: "Branch C1", Address: "Addr C1", CountryISO2: "GB", CountryName: "UK", IsHeadquarter: false},
 	}
@@ -95,7 +95,7 @@ func TestSaveBranchesAndGetByCountryAndDelete(t *testing.T) {
 		t.Errorf("expected BranchesAdded=1; got %+v", summary)
 	}
 
-	// 3) Duplicate branch
+	// Duplicate branch
 	summary, err = repo.SaveBranches(ctx, branches)
 	if err != nil {
 		t.Fatal(err)

@@ -8,23 +8,23 @@ import (
 	"github.com/przemekk6973/swift-code-app/app/internal/util"
 )
 
-// SwiftService realizuje operacje na SWIFTach
+// SwiftService does operations on SWIFT coes
 type SwiftService struct {
 	repo port.SwiftRepository
 }
 
-// NewSwiftService tworzy instancję serwisu
+// NewSwiftService creates new insance of service
 func NewSwiftService(r port.SwiftRepository) *SwiftService {
 	return &SwiftService{repo: r}
 }
 
-// GetSwiftCodeDetails zwraca dane HQ lub branch po kodzie
+// GetSwiftCodeDetails returns data of HQ or branch by code
 func (s *SwiftService) GetSwiftCodeDetails(ctx context.Context, code string) (models.SwiftCode, error) {
 	// walidacja formatu SWIFT
 	if err := util.ValidateSwiftCode(code); err != nil {
 		return models.SwiftCode{}, util.BadRequest("invalid SWIFT code: %v", err)
 	}
-	// pobierz z repozytorium
+	// get from repository
 	swift, err := s.repo.GetByCode(ctx, code)
 	if err != nil {
 		if err == port.ErrNotFound {
@@ -35,7 +35,7 @@ func (s *SwiftService) GetSwiftCodeDetails(ctx context.Context, code string) (mo
 	return swift, nil
 }
 
-// GetSwiftCodesByCountry zwraca wszystkie HQ i oddziały dla danego ISO2
+// GetSwiftCodesByCountry returns every HQ and branch for every ISO2
 func (s *SwiftService) GetSwiftCodesByCountry(ctx context.Context, iso2 string) (models.CountrySwiftCodesResponse, error) {
 	// walidacja ISO2
 	if err := util.ValidateCountryISO2(iso2); err != nil {
@@ -44,21 +44,21 @@ func (s *SwiftService) GetSwiftCodesByCountry(ctx context.Context, iso2 string) 
 	list, err := s.repo.GetByCountry(ctx, iso2)
 	if err != nil {
 		if err == port.ErrNotFound {
-			// no data for this country → 404
+			// no data for this country: 404
 			return models.CountrySwiftCodesResponse{}, util.NotFound("no SWIFT codes for country %s", iso2)
 		}
-		// any other repo error → 500
+		// any other repo error: 500
 		return models.CountrySwiftCodesResponse{}, util.Internal("error fetching by country: %v", err)
 	}
-	// (optional) if repo might return an empty slice without error:
+	// if repo might return an empty slice without error:
 	if len(list) == 0 {
 		return models.CountrySwiftCodesResponse{}, util.NotFound("no SWIFT codes for country %s", iso2)
 	}
 
-	// nazwa kraju z pierwszego elementu
+	// country name from the first element
 	countryName := list[0].CountryName
 
-	// konsolidacja HQ i oddziałów w jedną listę SwiftBranch
+	// consolidate HQ and branches into one list SwiftBranch
 	var branches []models.SwiftBranch
 	for _, sc := range list {
 		branches = append(branches, models.SwiftBranch{
@@ -77,11 +77,14 @@ func (s *SwiftService) GetSwiftCodesByCountry(ctx context.Context, iso2 string) 
 	}, nil
 }
 
-// AddSwiftCode dodaje pojedyncze HQ lub oddział
+// AddSwiftCode adds single HQ or branch
 func (s *SwiftService) AddSwiftCode(ctx context.Context, sc models.SwiftCode) error {
-	// walidacje
+	// validate
 	if err := util.ValidateSwiftCode(sc.SwiftCode); err != nil {
 		return util.BadRequest("invalid SWIFT code: %v", err)
+	}
+	if err := util.ValidateSwiftSuffix(sc.SwiftCode, sc.IsHeadquarter); err != nil {
+		return err
 	}
 	if err := util.ValidateCountryISO2(sc.CountryISO2); err != nil {
 		return util.BadRequest("invalid country ISO2: %v", err)
@@ -98,7 +101,7 @@ func (s *SwiftService) AddSwiftCode(ctx context.Context, sc models.SwiftCode) er
 		return nil
 	}
 
-	// dodanie oddziału – szukamy HQ po pierwszych 8 znakach + "XXX"
+	// add branch – search HQ with first 8 characters + "XXX"
 	hqCode := sc.SwiftCode[:8] + "XXX"
 	branch := models.SwiftBranch{
 		Address:       sc.Address,
@@ -121,7 +124,7 @@ func (s *SwiftService) AddSwiftCode(ctx context.Context, sc models.SwiftCode) er
 	return nil
 }
 
-// DeleteSwiftCode usuwa HQ (i wszystkie oddziały) lub pojedynczy oddział
+// DeleteSwiftCode removes HQ (and its branches) or single branch
 func (s *SwiftService) DeleteSwiftCode(ctx context.Context, code string) error {
 	if err := util.ValidateSwiftCode(code); err != nil {
 		return util.BadRequest("invalid SWIFT code: %v", err)
@@ -135,7 +138,7 @@ func (s *SwiftService) DeleteSwiftCode(ctx context.Context, code string) error {
 	return nil
 }
 
-// HealthCheck sprawdza, czy baza jest dostępna
+// HealthCheck pings the database to check if it is available
 func (s *SwiftService) HealthCheck(ctx context.Context) error {
 	return s.repo.Ping(ctx)
 }

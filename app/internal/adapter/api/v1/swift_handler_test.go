@@ -50,7 +50,6 @@ func setupRouterWithStub(repo port.SwiftRepository) *gin.Engine {
 	svc := usecases.NewSwiftService(repo)
 	handler := NewSwiftHandler(svc)
 	r := gin.New()
-	// only mount the handlers you want to test
 	r.GET("/v1/swift-codes/:swift-code", handler.GetSwiftCode)
 	r.GET("/v1/swift-codes/country/:countryISO2code", handler.GetSwiftCodesByCountry)
 	r.POST("/v1/swift-codes", handler.AddSwiftCode)

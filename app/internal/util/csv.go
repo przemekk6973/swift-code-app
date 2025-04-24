@@ -10,9 +10,9 @@ import (
 	"github.com/przemekk6973/swift-code-app/app/internal/domain/models"
 )
 
-// LoadSwiftCodes czyta plik CSV pod ścieżką csvPath i zwraca dwie listy:
-//   - hqList: rekordy z kodami HQ (kończące się na "XXX")
-//   - branchList: rekordy z kodami oddziałów
+// LoadSwiftCodes reads CSV from csvPath and returns two lists:
+//   - hqList: records with HQ (ending with "XXX")
+//   - branchList: records with branch codes
 func LoadSwiftCodes(csvPath string, countries map[string]string) ([]models.SwiftCode, []models.SwiftCode, error) {
 	file, err := os.Open(csvPath)
 	if err != nil {
@@ -23,13 +23,13 @@ func LoadSwiftCodes(csvPath string, countries map[string]string) ([]models.Swift
 	reader := csv.NewReader(file)
 	reader.TrimLeadingSpace = true
 
-	// Wczytaj nagłówek
+	// load header
 	header, err := reader.Read()
 	if err != nil {
 		return nil, nil, fmt.Errorf("error reading CSV header: %v", err)
 	}
 
-	// Mapowanie nazw kolumn na indeksy
+	// map column names to indexes
 	indexes := make(map[string]int)
 	for i, col := range header {
 		key := strings.ToUpper(strings.TrimSpace(col))
@@ -39,7 +39,7 @@ func LoadSwiftCodes(csvPath string, countries map[string]string) ([]models.Swift
 	var hqList []models.SwiftCode
 	var branchList []models.SwiftCode
 
-	// Przetwarzanie wierszy
+	// row processing
 	for {
 		record, err := reader.Read()
 		if err == io.EOF {
@@ -49,14 +49,14 @@ func LoadSwiftCodes(csvPath string, countries map[string]string) ([]models.Swift
 			return nil, nil, fmt.Errorf("error reading CSV record: %v", err)
 		}
 
-		// Ekstrakcja i normalizacja pól
+		//Field extraction and normalization
 		swiftCode := strings.ToUpper(strings.TrimSpace(record[indexes["SWIFT CODE"]]))
 		countryISO2 := strings.ToUpper(strings.TrimSpace(record[indexes["COUNTRY ISO2 CODE"]]))
 		bankName := strings.TrimSpace(record[indexes["NAME"]])
 		address := strings.TrimSpace(record[indexes["ADDRESS"]])
 		countryName := strings.TrimSpace(record[indexes["COUNTRY NAME"]])
 
-		// Walidacja kodu i kraju
+		// validate code and country
 		if err := ValidateSwiftCode(swiftCode); err != nil {
 			continue
 		}
@@ -67,7 +67,7 @@ func LoadSwiftCodes(csvPath string, countries map[string]string) ([]models.Swift
 			continue
 		}
 
-		// Rozdzielenie HQ vs oddział
+		// HQ and branch separation
 		isHQ := strings.HasSuffix(swiftCode, "XXX")
 		if isHQ {
 			hqList = append(hqList, models.SwiftCode{

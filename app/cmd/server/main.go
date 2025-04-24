@@ -38,7 +38,7 @@ import (
 func main() {
 	_ = godotenv.Load(".env")
 
-	// 1) Init Mongo repo
+	// Init Mongo repo
 	uri := os.Getenv("MONGO_URI")
 	db := os.Getenv("MONGO_DB")
 	coll := os.Getenv("MONGO_COLLECTION")
@@ -47,7 +47,7 @@ func main() {
 		log.Fatalf("failed to connect to mongo: %v", err)
 	}
 
-	// 2) Wczytaj mapę krajów (jeśli podana)
+	// Load countries map
 	countriesPath := os.Getenv("COUNTRIES_CSV")
 	var countries map[string]string
 	if countriesPath != "" {
@@ -60,7 +60,7 @@ func main() {
 		countries = map[string]string{}
 	}
 
-	// 3) Import CSV (jeśli ścieżka ustawiona w .env)
+	// Import CSV
 	if csvPath := os.Getenv("CSV_PATH"); csvPath != "" {
 		if _, err := initializer.ImportCSV(repo, csvPath, countries); err != nil {
 			log.Fatalf("CSV import failed: %v", err)
@@ -69,11 +69,11 @@ func main() {
 		log.Println("CSV_PATH not set, skipping import")
 	}
 
-	// 4) Wire up service & API
+	// Wire up service & API
 	svc := usecases.NewSwiftService(repo)
 	router := api.SetupRouter(svc)
 
-	// Route dla Swagger UI
+	// Route for Swagger API
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	port := os.Getenv("PORT")
@@ -93,27 +93,27 @@ func main() {
 		}
 	}()
 
-	// czekaj na SIGINT/SIGTERM
+	// wait for SIGINT/SIGTERM
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	log.Println("shutting down server...")
 
-	// kontekst z timeoutem na graceful shutdown
+	// shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// najpierw HTTP server
+	// shutdown HTTP server
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Printf("server forced to shutdown: %v", err)
 	}
 
-	// potem zamknięcie Mongo
+	// shutdown Mongo
 	if closer, ok := repo.(interface{ Close(context.Context) error }); ok {
 		if err := closer.Close(ctx); err != nil {
 			log.Printf("error closing Mongo connection: %v", err)
 		}
 	}
 
-	log.Println("server exited cleanly")
+	log.Println("server exited")
 }

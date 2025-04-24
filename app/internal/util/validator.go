@@ -5,7 +5,7 @@ import (
 	"unicode"
 )
 
-// ValidateSwiftCode sprawdza, czy kod SWIFT ma długość 8 lub 11, tylko litery i cyfry
+// ValidateSwiftCode checks if SWIFT code is 8 or 11 characters long and contains only letters and digits
 func ValidateSwiftCode(code string) error {
 	length := len(code)
 	if length != 8 && length != 11 {
@@ -19,7 +19,7 @@ func ValidateSwiftCode(code string) error {
 	return nil
 }
 
-// ValidateSwiftSuffix sprawdza, czy kody HQ (XXX) i oddziałów są poprawne
+// ValidateSwiftSuffix checks if HQ (XXX) and branches codes are valid
 func ValidateSwiftSuffix(code string, isHQ bool) error {
 	if isHQ && !(len(code) == 11 && code[8:] == "XXX") {
 		return WrapError(ErrBadRequest, "HQ SWIFT code must end with 'XXX'")
@@ -44,9 +44,9 @@ func ValidateCountryISO2(iso2 string) error {
 }
 
 // ValidateCountryNameMatch checks if the given country name matches the entry
-// in nameMap for the provided ISO‑2 code (case‑insensitive on both ISO2 and name).
+// in nameMap for the provided ISO2 code (case‑insensitive on both ISO2 and name).
 func ValidateCountryNameMatch(iso2, inputName string, nameMap map[string]string) error {
-	// 1) Normalize the ISO2 code to uppercase
+	// Normalize the ISO2 code to uppercase
 	iso2 = strings.ToUpper(strings.TrimSpace(iso2))
 
 	expected, ok := nameMap[iso2]
@@ -54,7 +54,7 @@ func ValidateCountryNameMatch(iso2, inputName string, nameMap map[string]string)
 		return WrapError(ErrBadRequest, "unknown country ISO2: %s", iso2)
 	}
 
-	// 2) Trim and compare names case‑insensitively
+	// Trim and compare names case‑insensitively
 	inputName = strings.TrimSpace(inputName)
 	if !strings.EqualFold(inputName, expected) {
 		return WrapError(

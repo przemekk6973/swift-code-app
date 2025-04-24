@@ -6,9 +6,9 @@ import (
 
 func TestValidateSwiftCode(t *testing.T) {
 	valid := []string{
-		"ABCDEFGH",    // 8 znaków, HQ bez XXX
-		"ABCDEFGHXXX", // 11 znaków, HQ
-		"ABCDEFGH123", // 11 znaków, branch
+		"ABCDEFGH",    // 8 characters, HQ without XXX
+		"ABCDEFGHXXX", // 11 characters, HQ
+		"ABCDEFGH123", // 11 characters, branch
 	}
 	for _, code := range valid {
 		if err := ValidateSwiftCode(code); err != nil {
@@ -17,10 +17,10 @@ func TestValidateSwiftCode(t *testing.T) {
 	}
 
 	invalid := []string{
-		"ABC",           // za krótkie
-		"ABCDEFGHIJKLM", // za długie
-		"ABCDEFGH!@#",   // zabronione znaki
-		"ABCDEFGHXX",    // 10 znaków
+		"ABC",           // too short
+		"ABCDEFGHIJKLM", // too long
+		"ABCDEFGH!@#",   // forbidden characters
+		"ABCDEFGHXX",    // wrong amount of characters
 	}
 	for _, code := range invalid {
 		if err := ValidateSwiftCode(code); err == nil {
@@ -44,6 +44,23 @@ func TestValidateCountryISO2(t *testing.T) {
 	}
 }
 
+func TestValidateSwiftSuffix(t *testing.T) {
+	err := ValidateSwiftSuffix("ABCDEFGHXXX", false)
+	if err == nil {
+		t.Error("branch ending with XXX is invalid")
+	}
+
+	err = ValidateSwiftSuffix("ABCDEFGH001", true)
+	if err == nil {
+		t.Error("HQ without XXX is invalid")
+	}
+
+	err = ValidateSwiftSuffix("ABCDEFGHXXX", true)
+	if err != nil {
+		t.Errorf("valid HQ failed: %v", err)
+	}
+}
+
 func TestValidateCountryNameMatch(t *testing.T) {
 	countries := map[string]string{
 		"PL": "POLAND",
@@ -64,5 +81,17 @@ func TestValidateCountryNameMatch(t *testing.T) {
 	// missing key
 	if err := ValidateCountryNameMatch("XX", "Xland", countries); err == nil {
 		t.Errorf("expected error for missing country ISO2 key")
+	}
+}
+
+func TestValidateCountryNameMatch_Errors(t *testing.T) {
+	m := map[string]string{"PL": "Poland"}
+	// Unknown ISO2
+	if err := ValidateCountryNameMatch("XX", "X", m); err == nil {
+		t.Error("expected error for unknown ISO2, got nil")
+	}
+	// Mismatch name
+	if err := ValidateCountryNameMatch("PL", "Deutschland", m); err == nil {
+		t.Error("expected error for name mismatch, got nil")
 	}
 }

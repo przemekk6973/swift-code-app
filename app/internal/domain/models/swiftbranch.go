@@ -1,5 +1,6 @@
 package models
 
+// SwiftBranch structure of SWIFT branch
 type SwiftBranch struct {
 	Address       string `bson:"address"       json:"address"`
 	BankName      string `bson:"bankName"      json:"bankName"`

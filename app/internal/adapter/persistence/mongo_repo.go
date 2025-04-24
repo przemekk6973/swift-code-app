@@ -14,13 +14,13 @@ import (
 	"github.com/przemekk6973/swift-code-app/app/internal/port"
 )
 
-// MongoRepository implementuje port.SwiftRepository dla MongoDB
+// MongoRepository implements port.SwiftRepository for MongoDB
 type MongoRepository struct {
 	client     *mongo.Client
 	collection *mongo.Collection
 }
 
-// NewMongoRepository tworzy nowe połączenie z MongoDB i inicjuje kolekcję
+// NewMongoRepository creates connection with MongoDB and inits collection
 func NewMongoRepository(uri, dbName, collName string) (port.SwiftRepository, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -32,7 +32,7 @@ func NewMongoRepository(uri, dbName, collName string) (port.SwiftRepository, err
 	}
 
 	coll := client.Database(dbName).Collection(collName)
-	// Indeksy
+	// Indexes
 	_, err = coll.Indexes().CreateMany(ctx, []mongo.IndexModel{
 		{
 			Keys:    bson.D{{Key: "swiftCode", Value: 1}},
@@ -51,7 +51,7 @@ func NewMongoRepository(uri, dbName, collName string) (port.SwiftRepository, err
 
 }
 
-// SaveHeadquarters implementacja: upsert dokumentów HQ
+// SaveHeadquarters
 func (r *MongoRepository) SaveHeadquarters(ctx context.Context, hqs []models.SwiftCode) (models.ImportSummary, error) {
 	var summary models.ImportSummary
 	for _, hq := range hqs {
@@ -71,14 +71,14 @@ func (r *MongoRepository) SaveHeadquarters(ctx context.Context, hqs []models.Swi
 	return summary, nil
 }
 
-// SaveBranches implementacja: dodajemy oddziały, sprawdzając istnienie HQ
+// SaveBranches add branches, checking if HQ exists
 func (r *MongoRepository) SaveBranches(ctx context.Context, branches []models.SwiftCode) (models.ImportSummary, error) {
 	var summary models.ImportSummary
 	for _, br := range branches {
-		// wylicz kod HQ po prefiksie 8 znaków
+		// get HQ with prefix of 8 characters
 		hqCode := strings.ToUpper(br.SwiftCode[:8] + "XXX")
 		filter := bson.M{"swiftCode": hqCode}
-		// dodaj do tablicy branches unikalnie
+		// add uniqie
 		update := bson.M{"$addToSet": bson.M{"branches": models.SwiftBranch{
 			SwiftCode:     br.SwiftCode,
 			BankName:      br.BankName,
@@ -102,9 +102,9 @@ func (r *MongoRepository) SaveBranches(ctx context.Context, branches []models.Sw
 	return summary, nil
 }
 
-// GetByCode pobiera SwiftCode (HQ lub oddział) po kodzie
+// GetByCode gets SwiftCode (HQ or branch) by code
 func (r *MongoRepository) GetByCode(ctx context.Context, code string) (models.SwiftCode, error) {
-	// 1) Fetch the HQ document that either has swiftCode == code OR contains the branch
+	// Fetch the HQ document that either has swiftCode == code OR contains the branch
 	filter := bson.M{
 		"$or": []bson.M{
 			{"swiftCode": code},
@@ -120,12 +120,12 @@ func (r *MongoRepository) GetByCode(ctx context.Context, code string) (models.Sw
 		return models.SwiftCode{}, err
 	}
 
-	// 2) If the code matches the HQ itself, return it (with its branches)
+	// If the code matches the HQ itself, return it (with its branches)
 	if doc.SwiftCode == code {
 		return doc, nil
 	}
 
-	// 3) Otherwise it must be one of the branches: find it and return a branch‐only struct
+	// Otherwise it must be one of the branches: find it and return a branch‐only struct
 	for _, br := range doc.Branches {
 		if br.SwiftCode == code {
 			return models.SwiftCode{
@@ -140,11 +140,11 @@ func (r *MongoRepository) GetByCode(ctx context.Context, code string) (models.Sw
 		}
 	}
 
-	// 4) If somehow it wasn’t in doc.Branches, treat as not found
+	// If somehow it wasn’t in doc.Branches, treat as not found
 	return models.SwiftCode{}, port.ErrNotFound
 }
 
-// GetByCountry pobiera wszystkie kody (HQ i oddziały) dla danego kraju
+// GetByCountry gets all code (HQ and branches) for a country
 func (r *MongoRepository) GetByCountry(ctx context.Context, iso2 string) ([]models.SwiftCode, error) {
 	cursor, err := r.collection.Find(ctx, bson.M{"countryISO2": iso2})
 	if err != nil {
@@ -158,9 +158,9 @@ func (r *MongoRepository) GetByCountry(ctx context.Context, iso2 string) ([]mode
 		if err := cursor.Decode(&hq); err != nil {
 			return nil, err
 		}
-		// dodaj HQ
+		// add HQ
 		results = append(results, hq)
-		// dodaj oddziały
+		// add branches
 		for _, br := range hq.Branches {
 			results = append(results, models.SwiftCode{
 				SwiftCode:     br.SwiftCode,
@@ -179,7 +179,7 @@ func (r *MongoRepository) GetByCountry(ctx context.Context, iso2 string) ([]mode
 
 }
 
-// AddBranch dodaje oddział do istniejącego HQ
+// AddBranch add branch to exisitng HQ
 func (r *MongoRepository) AddBranch(ctx context.Context, hqCode string, br models.SwiftBranch) error {
 	filter := bson.M{"swiftCode": hqCode}
 	update := bson.M{"$addToSet": bson.M{"branches": br}}
@@ -196,7 +196,7 @@ func (r *MongoRepository) AddBranch(ctx context.Context, hqCode string, br model
 	return nil
 }
 
-// Delete usuwa wpis po podanym kodzie SWIFT
+// Delete deletes entry by given SWIFT code
 func (r *MongoRepository) Delete(ctx context.Context, code string) error {
 	if strings.HasSuffix(code, "XXX") {
 		// usuń cały HQ i oddziały
@@ -209,7 +209,7 @@ func (r *MongoRepository) Delete(ctx context.Context, code string) error {
 		}
 		return nil
 	}
-	// usuń tylko oddział
+	// remove branch onlu
 	filter := bson.M{"branches.swiftCode": code}
 	update := bson.M{"$pull": bson.M{"branches": bson.M{"swiftCode": code}}}
 	res, err := r.collection.UpdateOne(ctx, filter, update)
@@ -226,7 +226,7 @@ func (r *MongoRepository) Ping(ctx context.Context) error {
 	return r.client.Ping(ctx, readpref.Primary())
 }
 
-// Close zamyka połączenie klienta MongoDB
+// Close closes MongoDB connection
 func (r *MongoRepository) Close(ctx context.Context) error {
 	return r.client.Disconnect(ctx)
 }

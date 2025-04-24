@@ -19,16 +19,16 @@ import (
 // Integration test covering full API flow with live MongoDB.
 func TestAPI_Integration(t *testing.T) {
 
-	// Użyj lokalnego MongoDB
+	// Load local MongoDB
 	uri := "mongodb://localhost:27017"
 
-	// Utwórz repozytorium i załaduj testowe dane CSV
+	// Create repo and load test data from CSV
 	repo, err := persistence.NewMongoRepository(uri, "testdb", "swiftCodes")
 	if err != nil {
 		t.Fatalf("repo init: %v", err)
 	}
 
-	// Przykładowy CSV do importu
+	// Example csv
 	csv := `COUNTRY ISO2 CODE,SWIFT CODE,NAME,ADDRESS,COUNTRY NAME
 PL,TESTPLP1XXX,TestHQ,AddrHQ,POLAND
 PL,TESTPLP1BR1,TestBR,AddrBR,POLAND
@@ -45,12 +45,12 @@ PL,TESTPLP1BR1,TestBR,AddrBR,POLAND
 		t.Fatalf("import CSV: %v", err)
 	}
 
-	// Przygotuj serwis i router
+	// Start service and router
 	gin.SetMode(gin.TestMode)
 	svc := usecases.NewSwiftService(repo)
 	router := api.SetupRouter(svc)
 
-	// Pomocnicza funkcja do wysyłania zapytań
+	// Helper function
 	do := func(method, path string, body interface{}) *httptest.ResponseRecorder {
 		var req *http.Request
 		if body != nil {

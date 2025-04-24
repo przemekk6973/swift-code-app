@@ -1,8 +1,8 @@
 // app/internal/util/params.go
 package util
 
-// ParamSwiftCode to nazwa segmentu w ścieżce Gin dla kodu SWIFT
+// ParamSwiftCode is the segment name in the Gin path for the SWIFT code
 const ParamSwiftCode = "swift-code"
 
-// ParamCountryISO2 to nazwa segmentu w ścieżce Gin dla kodu kraju ISO2
+// ParamCountryISO2 is the segment name in Gin path for country code ISO2
 const ParamCountryISO2 = "countryISO2code"

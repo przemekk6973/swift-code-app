@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	"github.com/przemekk6973/swift-code-app/app/internal/domain/models"
@@ -10,6 +11,7 @@ import (
 )
 
 type stubRepo struct {
+	existing     map[string]bool
 	byCode       map[string]models.SwiftCode
 	byCountry    map[string][]models.SwiftCode
 	addBranchErr error
@@ -21,7 +23,19 @@ func (s *stubRepo) Ping(ctx context.Context) error {
 }
 
 func (s *stubRepo) SaveHeadquarters(ctx context.Context, hqs []models.SwiftCode) (models.ImportSummary, error) {
-	return models.ImportSummary{}, nil
+	if s.existing == nil {
+		s.existing = make(map[string]bool)
+	}
+	var summary models.ImportSummary
+	for _, hq := range hqs {
+		if s.existing[hq.SwiftCode] {
+			summary.HQSkipped++
+		} else {
+			s.existing[hq.SwiftCode] = true
+			summary.HQAdded++
+		}
+	}
+	return summary, nil
 }
 func (s *stubRepo) SaveBranches(ctx context.Context, branches []models.SwiftCode) (models.ImportSummary, error) {
 	return models.ImportSummary{}, nil
@@ -54,7 +68,6 @@ func TestGetSwiftCodeDetails_NotFound(t *testing.T) {
 }
 
 func TestAddSwiftCode_BranchWithoutHQ(t *testing.T) {
-	// ustaw repo tak, żeby AddBranch zwracał ErrHQNotFound
 	svc := NewSwiftService(&stubRepo{addBranchErr: port.ErrHQNotFound})
 	err := svc.AddSwiftCode(context.Background(), models.SwiftCode{
 		SwiftCode:     "ABCDEFGHBR1",
@@ -74,5 +87,45 @@ func TestDeleteSwiftCode_NotFound(t *testing.T) {
 	err := svc.DeleteSwiftCode(context.Background(), "ABCDEFGHXXX")
 	if e, ok := err.(*util.AppError); !ok || e.StatusCode != 404 {
 		t.Errorf("expected 404 NotFound, got %v", err)
+	}
+}
+func TestAddSwiftCode_HQ_Duplicate(t *testing.T) {
+	code := models.SwiftCode{
+		SwiftCode:     "DUPLPLP1XXX",
+		BankName:      "Bank X",
+		Address:       "HQ Street",
+		CountryISO2:   "PL",
+		CountryName:   "POLAND",
+		IsHeadquarter: true,
+	}
+
+	repo := &stubRepo{existing: make(map[string]bool)}
+	svc := NewSwiftService(repo)
+
+	// Add HQ
+	if err := svc.AddSwiftCode(context.Background(), code); err != nil {
+		t.Fatalf("unexpected error on first insert: %v", err)
+	}
+
+	// Conflict
+	err := svc.AddSwiftCode(context.Background(), code)
+	if e, ok := err.(*util.AppError); !ok || e.StatusCode != http.StatusConflict {
+		t.Errorf("expected 409 Conflict, got %v", err)
+	}
+}
+
+func TestAddSwiftCode_InvalidSuffix(t *testing.T) {
+	svc := NewSwiftService(&stubRepo{})
+	code := models.SwiftCode{
+		SwiftCode:     "INVALID1ABC", // not ending with XXX
+		BankName:      "Bank X",
+		Address:       "HQ Street",
+		CountryISO2:   "PL",
+		CountryName:   "POLAND",
+		IsHeadquarter: true,
+	}
+	err := svc.AddSwiftCode(context.Background(), code)
+	if e, ok := err.(*util.AppError); !ok || e.StatusCode != 400 {
+		t.Errorf("expected 400 BadRequest for invalid HQ suffix, got %v", err)
 	}
 }

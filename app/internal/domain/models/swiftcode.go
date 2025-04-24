@@ -1,5 +1,6 @@
 package models
 
+// SwiftCode structure of SWIFT code
 type SwiftCode struct {
 	Address       string        `bson:"address"      json:"address"`
 	BankName      string        `bson:"bankName"     json:"bankName"`

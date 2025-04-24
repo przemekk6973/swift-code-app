@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// LoadCountryMap wczytuje CSV z dwóch kolumn: ISO2,CountryName
+// LoadCountryMap loads CSV from 2 colums: ISO2,CountryName
 func LoadCountryMap(path string) (map[string]string, error) {
 	f, err := os.Open(path)
 	if err != nil {

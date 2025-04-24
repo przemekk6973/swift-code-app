@@ -6,24 +6,24 @@ import (
 	"github.com/przemekk6973/swift-code-app/app/internal/domain/models"
 )
 
-// SwiftRepository definiuje metody CRUD dla kodów SWIFT
+// SwiftRepository defines CRUD for SWIFT codes
 type SwiftRepository interface {
-	// SaveHeadquarters zapisuje listę kodów głównych (HQ)
+	// SaveHeadquarters saves HQ list
 	SaveHeadquarters(ctx context.Context, hqs []models.SwiftCode) (models.ImportSummary, error)
 
-	// SaveBranches zapisuje listę kodów oddziałów
+	// SaveBranches saves list of branches
 	SaveBranches(ctx context.Context, branches []models.SwiftCode) (models.ImportSummary, error)
 
-	// GetByCode pobiera SwiftCode (HQ lub oddział) po kodzie
+	// GetByCode saves SwiftCode (HQ or branch) by code
 	GetByCode(ctx context.Context, code string) (models.SwiftCode, error)
 
-	// GetByCountry pobiera wszystkie kody dla danego kraju (ISO2)
+	// GetByCountry downloads all codes by ISO2
 	GetByCountry(ctx context.Context, iso2 string) ([]models.SwiftCode, error)
 
-	// AddBranch dodaje oddział do istniejącego HQ
+	// AddBranch adds branch for existing HQ
 	AddBranch(ctx context.Context, hqCode string, branch models.SwiftBranch) error
 
-	// Delete usuwa wpis po podanym kodzie SWIFT
+	// Delete deletes by SWIFT
 	Delete(ctx context.Context, code string) error
 
 	Ping(ctx context.Context) error

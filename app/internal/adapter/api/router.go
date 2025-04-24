@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-// SetupRouter ustawia wszystkie endpointy
+// SetupRouter sets all endpoints
 func SetupRouter(svc *usecases.SwiftService) *gin.Engine {
 	r := gin.Default()
 	// tu możesz dodać middleware: CORS, logging, recovery itd.

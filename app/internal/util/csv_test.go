@@ -40,7 +40,7 @@ DE,CCCCDEFFXXX,TestHQ2,Address3,GERMANY
 		t.Errorf("expected 1 branch, got %d", len(brList))
 	}
 
-	// sprawdź pierwszy HQ
+	// checkk first HQ
 	wantHQ := models.SwiftCode{
 		SwiftCode:     "AABBPLP1XXX",
 		BankName:      "TestHQ1",
@@ -55,7 +55,7 @@ DE,CCCCDEFFXXX,TestHQ2,Address3,GERMANY
 		t.Errorf("HQ mismatch:\n got %+v\nwant %+v", hqList[0], wantHQ)
 	}
 
-	// sprawdź branch
+	// check branch
 	wantBR := models.SwiftCode{
 		SwiftCode:     "AABBPLP1BR1",
 		BankName:      "TestBR1",

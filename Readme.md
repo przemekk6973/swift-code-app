@@ -26,9 +26,6 @@ A Go-based RESTful service for importing, storing and querying international ban
 - [Testing](#testing)
    - [Unit Tests](#unit-tests)
    - [Integration Tests](#integration-tests)
-   - [Persistence Layer Tests](#persistence-layer-tests)
-- [Contributing](#contributing)
-- [License](#license)
 
 ---
 
@@ -206,6 +203,25 @@ CSV_PATH=./pkg/data/Interns_2025_SWIFT_CODES.csv
 COUNTRIES_CSV=./pkg/data/countries.csv
 PORT=8080
 ```
+
+- `MONGO_URI`  
+  Connection string for MongoDB
+
+- `MONGO_DB`  
+  Name of the MongoDB database to use
+
+- `MONGO_COLLECTION`  
+  Name of the collection where SWIFT codes are stored
+
+- `CSV_PATH`  
+  File path to the SWIFT codes CSV to import on startup
+
+- `COUNTRIES_CSV`  
+  File path to the countries lookup CSV (ISO2 : country name)
+
+- `PORT`  
+  TCP port where the HTTP server listens
+- 
 #### 3. Start MongoDB locally (if not already running)
 #### 4. Run the app
 ```bash
@@ -259,34 +275,41 @@ Returns full details for a SWIFT code.
 
 ```
 {
-  "swiftCode": "string",
-  "bankName": "string",
   "address": "string",
+  "bankName": "string",
   "countryISO2": "string",
   "countryName": "string",
-  "isHeadquarter": boolean,
+  "isHeadquarter": true,
+  "swiftCode": "string",
   "branches": [
     {
-      "swiftCode": "string",
-      "bankName": "string",
       "address": "string",
+      "bankName": "string",
       "countryISO2": "string",
-      "isHeadquarter": boolean
+      "isHeadquarter": false,
+      "swiftCode": "string"
     }
   ]
 }
 ```
+
+
 #### Example (Branch):
 ```
 {
-  "swiftCode": "string",
-  "bankName": "BANK A",
-  "address": "456 BRANCH AVE, NY",
-  "countryISO2": "US",
-  "countryName": "UNITED STATES",
-  "isHeadquarter": boolean
+  "address": "string",
+  "bankName": "string",
+  "countryISO2": "string",
+  "isHeadquarter": false,
+  "swiftCode": "string"
 }
 ```
+
+#### Usage example (using curl)
+```
+curl -i http://localhost:8080/v1/swift-codes/*Swiftcode*
+```
+
 ### GET `/v1/swift-codes/country/{countryISO2code}`
 
 Returns all SWIFT codes for the given country (both HQ and branches).
@@ -297,15 +320,21 @@ Returns all SWIFT codes for the given country (both HQ and branches).
   "countryName": "string",
   "swiftCodes": [
     {
-      "swiftCode": "string",
-      "bankName": "string",
       "address": "string",
+      "bankName": "string",
       "countryISO2": "string",
-      "isHeadquarter": boolean
+      "isHeadquarter": false,
+      "swiftCode": "string"
     }
   ]
 }
 ```
+#### Usage example (using curl)
+```
+curl -i http://localhost:8080/v1/swift-codes/country/*ISO2*
+```
+
+
 
 ### POST `/v1/swift-codes`
 
@@ -313,12 +342,12 @@ Adds a new SWIFT code. Can be either a headquarter or branch.
 
 ```
 {
-  "swiftCode": "string",
-  "bankName": "string",
   "address": "string",
+  "bankName": "string",
   "countryISO2": "string",
   "countryName": "string",
-  "isHeadquarter": boolean
+  "isHeadquarter": boolean,
+  "swiftCode": "string"
 }
 ```
 #### Response:
@@ -329,6 +358,20 @@ Adds a new SWIFT code. Can be either a headquarter or branch.
 }
 ```
 Returns `409 Conflict` if the SWIFT code already exists.
+
+#### Usage example (using curl)
+```
+curl -i -X POST http://localhost:8080/v1/swift-codes \
+  -H "Content-Type: application/json" \
+  -d '{
+    "address":       "string",
+    "bankName":      "string",
+    "countryISO2":   "string",
+    "countryName":   "string",
+    "isHeadquarter": bool,
+    "swiftCode":     "string"
+  }' 
+  ```
 
 ### DELETE `/v1/swift-codes/{swiftCode}`
 
@@ -350,6 +393,10 @@ Deletes a SWIFT code.
   "status": "ok"
 }
 ```
+#### Usage example (using curl)
+```
+curl -i -X DELETE http://localhost:8080/v1/swift-codes/*Swiftcode*
+```
 
 ### Swagger Documentation
 
@@ -366,13 +413,56 @@ Here you can:
 This project includes full test coverage:
 
 - Unit tests for logic, validation, handlers
-- Integration tests with real MongoDB containers
+- Integration tests with MongoDB containers
 
 ---
 
-### Run All Tests (Manually)
+### Run All Tests
 
-You can run all tests in the project with a single command:
+#### Unit tests
+You can run all unit tests in the project with a single command:
 
 ```bash
 go test ./... -v
+```
+
+#### Integration tests
+
+Before running integration tests, ensure you have a MongoDB instance available on localhost:27017. You can do this with Docker:
+
+```bash
+docker run -d --name mongo-test -p 27017:27017 mongo:6
+```
+
+If there is already container named `mongo` with required database, you can run this command:
+
+```bash
+docker start mongo
+```
+
+Then, from the project root, run:
+
+```bash
+go test ./app/integration -v
+```
+The test will:
+- Connect to `mongodb://localhost:27017`
+- Import a small in-memory CSV into a temporary database
+- Exercise all CRUD endpoints via Gin’s router
+- Report pass/fail results
+
+## Test Coverage
+
+The project includes both unit and integration tests to check core functionality and overall API behavior.
+
+| Module / Location             | Description                                         |
+|-------------------------------|-----------------------------------------------------|
+| `pkg/csv`                     | Reading and parsing the CSV file                    |
+| `internal/util`               | Validation helpers (country codes, SWIFT format)    |
+| `internal/domain/usecases`    | Business logic (adding, fetching, deleting codes)   |
+| `database/`                   | MongoDB setup and data operations                   |
+| `cmd/router`                  | Route setup and HTTP request handling               |
+| `app/internal/adapter/api/v1` | API handlers and JSON responses                     |
+| `app/integration`             | End-to-end tests of the API with a live database    |
+
+

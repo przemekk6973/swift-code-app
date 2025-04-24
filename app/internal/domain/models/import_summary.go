@@ -1,6 +1,6 @@
 package models
 
-// ImportSummary podsumowuje wynik importu CSV
+// ImportSummary summaries CSV import
 type ImportSummary struct {
 	HQAdded           int `json:"hqAdded"`
 	HQSkipped         int `json:"hqSkipped"`

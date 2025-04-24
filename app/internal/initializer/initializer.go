@@ -11,8 +11,7 @@ import (
 	"github.com/przemekk6973/swift-code-app/app/internal/util"
 )
 
-// ImportCSV parsuje CSV pod ścieżką csvPath i zapisuje kody poprzez repo.
-// Argument countries możesz wstępnie zostawić pusty.
+// ImportCSV parses CSV with csvPath and saves the code through the repository
 func ImportCSV(repo port.SwiftRepository, csvPath string, countries map[string]string) (*models.ImportSummary, error) {
 	start := time.Now()
 

@@ -15,12 +15,12 @@ func (e *AppError) Error() string {
 	return e.Message
 }
 
-// NewError tworzy nowy AppError z danym kodem statusu
+// NewError creates new AppError with code status
 func NewError(message string, statusCode int) *AppError {
 	return &AppError{Message: message, StatusCode: statusCode}
 }
 
-// WrapError opakowuje komunikat w bazowy AppError
+// WrapError wraps the communicate with AppError
 func WrapError(base *AppError, format string, args ...interface{}) *AppError {
 	return &AppError{
 		Message:    fmt.Sprintf(format, args...),
@@ -28,7 +28,7 @@ func WrapError(base *AppError, format string, args ...interface{}) *AppError {
 	}
 }
 
-// Predefiniowane błędy bazowe
+// base errors
 var (
 	ErrBadRequest = NewError("bad request", http.StatusBadRequest)
 	ErrNotFound   = NewError("not found", http.StatusNotFound)
@@ -36,7 +36,7 @@ var (
 	ErrInternal   = NewError("internal server error", http.StatusInternalServerError)
 )
 
-// StatusCodeFromError zwraca HTTP status dla dowolnego błędu
+// StatusCodeFromError returns HTTP status for any error
 func StatusCodeFromError(err error) int {
 	if e, ok := err.(*AppError); ok {
 		return e.StatusCode
@@ -44,24 +44,24 @@ func StatusCodeFromError(err error) int {
 	return http.StatusInternalServerError
 }
 
-// Helpery do tworzenia nowych AppError z komunikatem
+// Helpery to create new AppError with statement
 
-// BadRequest tworzy AppError z kodem 400
+// BadRequest creates AppError with 400 code
 func BadRequest(format string, args ...interface{}) *AppError {
 	return WrapError(ErrBadRequest, format, args...)
 }
 
-// NotFound tworzy AppError z kodem 404
+// NotFound creates AppError with 404 code
 func NotFound(format string, args ...interface{}) *AppError {
 	return WrapError(ErrNotFound, format, args...)
 }
 
-// Conflict tworzy AppError z kodem 409
+// Conflict creates AppError with 409 code
 func Conflict(format string, args ...interface{}) *AppError {
 	return WrapError(ErrConflict, format, args...)
 }
 
-// Internal tworzy AppError z kodem 500
+// Internal creates AppError with 500 code
 func Internal(format string, args ...interface{}) *AppError {
 	return WrapError(ErrInternal, format, args...)
 }
