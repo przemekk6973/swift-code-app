@@ -307,7 +307,7 @@ Returns full details for a SWIFT code.
 
 #### Usage example (using curl)
 ```
-curl -i http://localhost:8080/v1/swift-codes/*Swiftcode*
+curl http://localhost:8080/v1/swift-codes/*Swiftcode*
 ```
 
 ### GET `/v1/swift-codes/country/{countryISO2code}`
@@ -331,7 +331,7 @@ Returns all SWIFT codes for the given country (both HQ and branches).
 ```
 #### Usage example (using curl)
 ```
-curl -i http://localhost:8080/v1/swift-codes/country/*ISO2*
+curl http://localhost:8080/v1/swift-codes/country/*ISO2*
 ```
 
 
@@ -361,7 +361,7 @@ Returns `409 Conflict` if the SWIFT code already exists.
 
 #### Usage example (using curl)
 ```
-curl -i -X POST http://localhost:8080/v1/swift-codes \
+curl -X POST http://localhost:8080/v1/swift-codes \
   -H "Content-Type: application/json" \
   -d '{
     "address":       "string",
@@ -395,7 +395,7 @@ Deletes a SWIFT code.
 ```
 #### Usage example (using curl)
 ```
-curl -i -X DELETE http://localhost:8080/v1/swift-codes/*Swiftcode*
+curl -X DELETE http://localhost:8080/v1/swift-codes/*Swiftcode*
 ```
 
 ### Swagger Documentation
