@@ -423,7 +423,7 @@ This project includes full test coverage:
 You can run all unit tests in the project with a single command:
 
 ```bash
-go test ./... -v
+go test ./...
 ```
 
 #### Integration tests
