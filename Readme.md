@@ -398,6 +398,10 @@ Deletes a SWIFT code.
 curl -X DELETE http://localhost:8080/v1/swift-codes/*Swiftcode*
 ```
 
+### Health Check
+```bash
+curl -i http://localhost:8080/healthz
+```
 ### Swagger Documentation
 
 Available at:
